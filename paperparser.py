@@ -1,12 +1,11 @@
-import cohere
-import pandas as pd
-from typing import List,Tuple
-import numpy as np
-from numpy import dot
-from numpy.linalg import norm
-
 class PaperParser():
     def __init__(self,corpus_text=None,model="small") -> None:
+        """
+        Model choices are:-
+        1. large - length of embeddings per token is 4096
+        2. small - length of embeddings per token is 1024
+        3. multilingual-22-12
+        """
         self.model = model
         self.models = ["small","large","multilingual-22-12"]
         self.client = cohere.Client("7lUDtMMSa1bVCEVIKEOms0jPImRnselfUQucOH5v")
@@ -53,7 +52,8 @@ class PaperParser():
             List[Tuple[str, float]]: Corpus documents and cosine similarity scores, sorted in descending order.
         """
         # Get embedding
-        text_embeddings = self.client.embed(texts=text,model=self.model).embeddings
+        input_text = [text]
+        text_embeddings = self.client.embed(texts=input_text,model=self.model).embeddings
         # Get cosine similarities
         res = []
         for record in self.corpus.items():
@@ -62,3 +62,37 @@ class PaperParser():
         res.sort(key=lambda a:a[1],reverse=True)
 
         return res
+    
+    def calc_tf_idf(self,result="df",top_n=10):
+        """
+        Calculates the TF-IDF of the ABSTRACT field in the corpus and returns either
+        the whole matrix or the top N results
+
+        Args:
+            result (str, optional): flag to toggle between returning the whole matrix or just the top n results.
+                                    Set to 'df' to return whole matrix, set to 'top' to return the top n results. 
+                                    Defaults to "df".
+            top_n (int, optional):  number of results to return. Defaults to 5.
+
+        Returns:
+            _type_: _description_
+        """
+        tfidf_texts = []
+        for idx in self.corpus:
+            tfidf_texts.append(self.corpus[idx]["ABSTRACT"])
+        vectorizer = TfidfVectorizer()
+        tf_idf = vectorizer.fit_transform(tfidf_texts)
+        dense = tf_idf.todense()
+        dense_list = list(dense)
+        output_features = vectorizer.get_feature_names_out()
+        df = pd.DataFrame(dense, columns=output_features)
+
+        if result == "top":
+            top_df = []
+            for row,index in df.iterrows():
+                # print(index.sort_values(ascending=False)[:top_n])
+                top_df.append(index.sort_values(ascending=False)[:top_n])
+            
+            return pd.DataFrame(top_df)
+        else:
+            return df
