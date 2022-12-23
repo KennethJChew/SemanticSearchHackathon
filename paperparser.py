@@ -41,29 +41,7 @@ class PaperParser():
         for idx,embedding in enumerate(corpus_embeddings):
             self.corpus[idx]["EMBEDDING"] = embedding
         
-
-    def get_cos_sim(self,text: str) -> List[Tuple[str, float]]:
-        """Return cosine similarity scores (sorted in descending order) of corpus documents with input text.
-
-        Args:
-            text (str): Input text to be compared against corpus.
-
-        Returns:
-            List[Tuple[str, float]]: Corpus documents and cosine similarity scores, sorted in descending order.
-        """
-        # Get embedding
-        input_text = [text]
-        text_embeddings = self.client.embed(texts=input_text,model=self.model).embeddings
-        # Get cosine similarities
-        res = []
-        for record in self.corpus.items():
-            cos_sim = dot(text_embeddings, record[1]["EMBEDDING"])/(norm(text_embeddings)*norm(record[1]["EMBEDDING"]))
-            res.append((record[1]["TITLE"],float(cos_sim)))
-        res.sort(key=lambda a:a[1],reverse=True)
-
-        return res
-    
-    def calc_tf_idf(self,result="df",top_n=10):
+    def calc_tf_idf(self,text,result="df",top_n=10):
         """
         Calculates the TF-IDF of the ABSTRACT field in the corpus and returns either
         the whole matrix or the top N results
@@ -78,21 +56,55 @@ class PaperParser():
             _type_: _description_
         """
         tfidf_texts = []
-        for idx in self.corpus:
-            tfidf_texts.append(self.corpus[idx]["ABSTRACT"])
+        for each in text:
+            tfidf_texts.append(each[1])
+        print(tfidf_texts)
+        # for idx in self.corpus:
+        #     tfidf_texts.append(self.corpus[idx]["ABSTRACT"])
+
         vectorizer = TfidfVectorizer()
         tf_idf = vectorizer.fit_transform(tfidf_texts)
         dense = tf_idf.todense()
         dense_list = list(dense)
         output_features = vectorizer.get_feature_names_out()
         df = pd.DataFrame(dense, columns=output_features)
-
+        
+        return_result = []
         if result == "top":
-            top_df = []
             for row,index in df.iterrows():
-                # print(index.sort_values(ascending=False)[:top_n])
-                top_df.append(index.sort_values(ascending=False)[:top_n])
-            
-            return pd.DataFrame(top_df)
+                return_result.append(index.sort_values(ascending=False)[0:top_n])
         else:
             return df
+    
+    def get_cos_sim(self,text: str,top_n=5) -> List[Tuple[str, float]]:
+        """Return cosine similarity scores (sorted in descending order) of corpus documents with input text.
+
+        Args:
+            text (str): Input text to be compared against corpus.
+
+        Returns:
+            List[Tuple[str, float]]: Corpus documents and cosine similarity scores, sorted in descending order.
+        """
+        # Get embedding
+        input_text = [text]
+        text_embeddings = self.client.embed(texts=input_text,model=self.model).embeddings
+        # Get cosine similarities
+        res = []
+        tf_idf_texts = []
+        for record in self.corpus.items():
+            cos_sim = dot(text_embeddings, record[1]["EMBEDDING"])/(norm(text_embeddings)*norm(record[1]["EMBEDDING"]))
+            tf_idf_texts.append((record[1]["TITLE"],record[1]["ABSTRACT"],float(cos_sim)))
+            res.append((record[1]["TITLE"],float(cos_sim)))
+        res.sort(key=lambda a:a[1],reverse=True)
+        tf_idf_texts.sort(key=lambda a:a[2],reverse=True)
+        # print(res)
+        # print(tf_idf_texts)
+        tf_idf_results = self.calc_tf_idf(text=tf_idf_texts,result="top",top_n=top_n)
+        if len(res) >= top_n:
+            return res[:top_n],tf_idf_results
+        else:
+            return res,tf_idf_results
+
+        # return res
+    
+    
