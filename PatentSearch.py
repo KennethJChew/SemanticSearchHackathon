@@ -21,7 +21,7 @@ st.title("Patent search")
 input_patent = st.text_input(
     "Enter a patent abstract:",
     key="input_text",
-    value="A garden tool is shown that has the compactness and general shape of a conventional straight shaft weeder. However, certain angles are formed in the shaft to facilitate easier use, particular by those with limited flexibility.",
+    value="",
 )
 if input_patent:
     res = parser.get_cos_sim(input_patent)
