@@ -5,5 +5,5 @@ dependencies:
   - transformers
   - streamlit
   - pip
-  -pip:
+  - pip:
     - cohere
