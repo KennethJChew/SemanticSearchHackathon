@@ -20,16 +20,20 @@ st.title("Patent search")
 input_patent = st.text_input(
     "Enter a patent abstract:",
     key="input_text",
-    value="A garden tool is shown that has the compactness and general shape of a conventional straight shaft weeder. However, certain angles are formed in the shaft to facilitate easier use, particular by those with limited flexibility.",
+    value="",
 )
 if input_patent:
-    res, tfidf = parser.get_cos_sim(input_patent)
+    res= parser.get_cos_sim(input_patent)
     st.write(f"Top {len(res)} closest match patents")
+    # st.write(tfidf)
     st.dataframe(
         pd.DataFrame(
             res,
-            columns=["Patent abstract", "Cosine similarity"],
+            columns=["Patent abstract", "Cosine similarity","Important Words"],
         )
+        # pd.DataFrame(
+        #     tfidf
+        # )
     )
     st.write("New patent description")
     # st.write(get_patent_desc(input_patent))
