@@ -1,0 +1,10 @@
+name: patentsearch
+dependencies:
+  - numpy
+  - pandas
+  - transformers
+  - streamlit
+  - pip
+  - scikit-learn
+  - pip:
+    - cohere
