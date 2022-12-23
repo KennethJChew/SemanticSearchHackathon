@@ -1,0 +1,6 @@
+cohere
+numpy
+pandas
+transformers
+streamlit
+scikit-learn
