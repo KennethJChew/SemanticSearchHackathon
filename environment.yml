@@ -4,3 +4,4 @@ dependencies:
   - pandas
   - transformers
   - streamlit
+  - cohere
