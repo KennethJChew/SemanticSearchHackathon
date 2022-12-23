@@ -1,0 +1,6 @@
+name: patentsearch
+dependencies:
+  - numpy
+  - pandas
+  - transformers
+  - streamlit
